@@ -3,7 +3,7 @@
 
 var idlegif = {
     _options: {
-        gifSearch: 'cute+cats',
+        gifSearch: 'glitch',
         giphyApiUrl: 'http://api.giphy.com/v1/gifs/search',
         apiKey: 'dc6zaTOxFJmzC',
 
@@ -41,6 +41,8 @@ var idlegif = {
 
         this.container = container;
         this.image = image;
+
+        this.bindEvent(image, 'click', this.hideIdleGif);
     },
 
     doGiphyApiRequest: function() {
@@ -85,8 +87,8 @@ var idlegif = {
     },
 
     hideIdleGif: function() {
-        this.container.style.opacity = 0;
-        this.container.style.pointerEvents = 'none';
+        idlegif.container.style.opacity = 0;
+        idlegif.container.style.pointerEvents = 'none';
     },
 
     // For compatibility issues with adding event handlers
