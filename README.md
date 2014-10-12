@@ -11,10 +11,18 @@ A simple screensaver-like thing for your site. Powered by the Giphy API.
 2. Set up idlegif's options. (e.g; ```<script>idlegif.options({ ... });</script>```) More on that below...
 3. Initialize it: ```<script>idlegif.init();</script>```
 
+##### Example
+
+> Paste-able code that can go before ```<body>```
+
+```
+<script src="https://raw.githubusercontent.com/KelvinLu/idlegif.js/master/idlegif.js"></script>
+<script>idlegif.options({gifSearch: 'cute+cats', idleTime: '30s'}); idlegif.init();</script>
+```
+
 ## Options
 
-idlegif is customizable. Call the ```options``` method before initialization and use an object literal as an argument, such as:
-```{gifSearch: 'cute+cats', idleTime: '30s'}```
+idlegif is customizable. Call the ```options``` method before initialization and use an object literal as an argument.
 
 * ```gifSearch```: A search string used by the Giphy API. The search string must consist of words delimited by ```+``` signs.
 * ```idleTime```: How long the webpage can remain idle until idlegif does its thing. Can be an integer in milliseconds or a string with ```s```/```ms``` at the end.
