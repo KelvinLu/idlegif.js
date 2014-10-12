@@ -3,19 +3,40 @@
 
 var idlegif = {
     _options: {
-        gifSearch: 'glitch',
+        gifSearch: 'adventure+time',
         giphyApiUrl: 'http://api.giphy.com/v1/gifs/search',
         apiKey: 'dc6zaTOxFJmzC',
+
+        idleTime: 1000,
+        idleTime_ms: 1000,
 
         color: 'black',
         transition: '0.5s',
     },
 
     _gifUrls: [],
+    _active: false,
+    _gifReady: false,
+    _timeout: null,
 
     init: function() {
         this.createIdleGif();
         this.doGiphyApiRequest();
+        this.startTimeout();
+    },
+
+    options: function(opts) {
+        for (var key in opts)
+            if (opts.hasOwnProperty(key))
+                this._options[key] = opts[key];
+    },
+
+    setGifSearch: function(term) {
+        this._options.gifSearch = term;
+    },
+
+    setIdleTime: function() {
+        this._options.gifSearch = term;
     },
 
     createIdleGif: function() {
@@ -33,7 +54,7 @@ var idlegif = {
         footer = document.createElement('span');
         footer.setAttribute('class', 'idlegif-footer');        
         footer.style.cssText = 'position: absolute; left: 0px; bottom: 0px; padding: 0.2em; opacity: 0.5; background-color: black; color: white;';
-        footer.innerHTML = '<a target="_blank" href="https://github.com/KelvinLu/idlegif.js" style="color: white;">idlegif.js | made with &#9829; &amp; &#9749;</a> | <a target="_blank" href="http://giphy.com/" style="color: white;">powered by Giphy</a>';
+        footer.innerHTML = '<a target="_blank" href="https://github.com/KelvinLu/idlegif.js" style="color: white; text-decoration: none;">idlegif.js | made with &#9829; &amp; &#9749;</a> | <a target="_blank" href="http://giphy.com/" style="color: white; text-decoration: none;">powered by Giphy</a>';
 
         document.body.appendChild(container);
         container.appendChild(image);
@@ -42,7 +63,7 @@ var idlegif = {
         this.container = container;
         this.image = image;
 
-        this.bindEvent(image, 'click', this.hideIdleGif);
+        this.bindEvent(image, 'click', this.hideIdlegifAndRestartTimeout);
     },
 
     doGiphyApiRequest: function() {
@@ -72,23 +93,82 @@ var idlegif = {
         };
     },
 
-    showIdleGif: function() {
-        if (!(gifUrl = this._gifUrls[Math.floor(this._gifUrls.length * Math.random())])) {
-            console.log('No GIF urls were present: ' + this._gifUrls);
+    chooseRandomGif: function() {
+        if (!(gifUrl = idlegif._gifUrls[Math.floor(idlegif._gifUrls.length * Math.random())])) {
+            console.log('No GIF urls were present: ' + idlegif._gifUrls);
             return;
         }
 
-        this.image.setAttribute('src', gifUrl);
-        // note that anonymous function is called from image object
-        this.bindEvent(this.image, 'load', function() {
-            idlegif.container.style.opacity = 1;
-            idlegif.container.style.pointerEvents = 'auto';
-        });
+        idlegif._gifReady = false;
+        idlegif.image.setAttribute('src', gifUrl);
+
+        idlegif.bindEvent(idlegif.image, 'load', function() {idlegif._gifReady = true; console.log('idlegif.js: new GIF loaded');});
+
+        console.log('idlegif.js: new GIF chosen');
+    },
+
+    showNewIdleGif: function() {
+        console.log('idlegif.js: idle time reached');
+
+        idlegif.chooseRandomGif();
+        idlegif.showIdleGifIfReady();
+    },
+
+    showIdleGifIfReady: function() {
+        if (idlegif._gifReady) idlegif.showIdleGif();
+        else setTimeout(idlegif.showIdleGifIfReady, 20);
+    },
+
+    showIdleGif: function() {
+        idlegif.container.style.opacity = 1;
+        idlegif.container.style.pointerEvents = 'auto';
+        idlegif._active = true;
+
+        console.log('idlegif.js: showing idlegif.js');
     },
 
     hideIdleGif: function() {
         idlegif.container.style.opacity = 0;
         idlegif.container.style.pointerEvents = 'none';
+        idlegif._active = false;
+
+        idlegif.restartTimeout();
+        console.log('idlegif.js: hiding idlegif.js');
+    },
+
+    startTimeout: function() {
+        idleTime = this._options.idleTime;
+
+        if (typeof idleTime == 'number')
+            this._options.idleTime_ms = idleTime
+        else if (idleTime.slice(-2) == 'ms')
+            this._options.idleTime_ms = parseInt(idleTime.slice(0, -2))
+        else if (idleTime.slice(-1) == 's')
+            this._options.idleTime_ms = parseInt(idleTime.slice(0, -1)) * 1000
+
+        this._timeout = setTimeout(this.showNewIdleGif, this._options.idleTime_ms);
+
+        this.bindEvent(document, 'mousemove', this.restartTimeoutIfNotActive);
+        this.bindEvent(document, 'scroll', this.hideIdlegifAndRestartTimeout);
+        this.bindEvent(document, 'mousewheel', this.hideIdlegifAndRestartTimeout);
+        this.bindEvent(document, 'keypress', this.hideIdlegifAndRestartTimeout);
+    },
+
+    // Called from document
+    restartTimeoutIfNotActive: function() {
+        if (!idlegif._active) idlegif.restartTimeout();
+    },
+
+    // Called from document
+    hideIdlegifAndRestartTimeout: function() {
+        if (idlegif._active) idlegif.hideIdleGif();
+        idlegif.restartTimeout();
+    },
+
+    // Called from document
+    restartTimeout: function() {
+        clearTimeout(idlegif._timeout);
+        idlegif._timeout = setTimeout(idlegif.showNewIdleGif, idlegif._options.idleTime_ms);
     },
 
     // For compatibility issues with adding event handlers
@@ -97,5 +177,5 @@ var idlegif = {
             elem.addEventListener(e, func, false);
         else
             elem.attachEvent('on' + e, func);
-    },
+    },    
 }
